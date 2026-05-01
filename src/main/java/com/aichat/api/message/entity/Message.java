@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "messages")
+@Access(AccessType.FIELD)
 @Getter
 @Setter
 @NoArgsConstructor

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "channels")
+@Access(AccessType.FIELD)
 @Getter
 @Setter
 @NoArgsConstructor
