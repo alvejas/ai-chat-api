@@ -1,0 +1,51 @@
+# =====================
+# IntelliJ IDEA
+# =====================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# =====================
+# Maven
+# =====================
+target/
+*.log
+
+# =====================
+# Java
+# =====================
+*.class
+
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Environment / secrets
+# =====================
+.env
+*.env
+
+# =====================
+# Spring Boot logs / temp
+# =====================
+logs/
+*.pid
+*.tmp
+
+# =====================
+# Coverage / test outputs
+# =====================
+coverage/
+*.exec
+
+# =====================
+# Node (se algum dia adicionares frontend no mesmo repo)
+# =====================
+node_modules/
+dist/
+build/
