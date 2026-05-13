@@ -25,7 +25,7 @@ jobs:
 
       - name: Review with GitHub Models
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.MODELS_TOKEN }}
         run: |
           python3 - <<'EOF'
           import json, os, sys, urllib.request, urllib.error
