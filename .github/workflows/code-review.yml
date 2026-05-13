@@ -38,7 +38,7 @@ jobs:
               sys.exit(0)
 
           payload = {
-              "model": "Meta-Llama-3.3-70B-Instruct",
+              "model": "gpt-4o-mini",
               "messages": [
                   {
                       "role": "system",
@@ -82,7 +82,7 @@ jobs:
           with open('review.md', 'w') as f:
               f.write("## 🤖 AI Code Review\n\n")
               f.write(review)
-              f.write("\n\n---\n*Powered by Llama 3.3 70B via [GitHub Models](https://github.com/marketplace/models)*\n")
+              f.write("\n\n---\n*Powered by GPT-4o mini via [GitHub Models](https://github.com/marketplace/models)*\n")
           EOF
 
       - name: Post review comment
