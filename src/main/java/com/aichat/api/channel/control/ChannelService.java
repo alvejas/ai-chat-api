@@ -1,8 +1,8 @@
 package com.aichat.api.channel.control;
 
 import com.aichat.api.channel.boundary.ChannelRequest;
+import com.aichat.api.channel.boundary.ChannelResponse;
 import com.aichat.api.channel.entity.Channel;
-import com.aichat.api.channel.control.ChannelRepository;
 import com.aichat.api.common.boundary.ResourceNotFoundException;
 import com.aichat.api.user.control.UserRepository;
 import com.aichat.api.user.entity.User;
@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,36 +22,62 @@ public class ChannelService {
     private final UserRepository userRepository;
 
     @Transactional
-    public Channel createChannel(ChannelRequest request) {
+    public ChannelResponse createChannel(ChannelRequest request) {
         User creator = userRepository.findByUsername(request.getCreatorUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getCreatorUsername()));
 
-        User receiver = userRepository.findByUsername(request.getReceiverUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getReceiverUsername()));
+        List<Long> memberIds = new ArrayList<>();
+        memberIds.add(creator.getId());
 
-        List<Long> members = new ArrayList<>();
-        members.add(creator.getId());
-        if (!receiver.getId().equals(creator.getId())) {
-            members.add(receiver.getId());
+        for (String receiverUsername : request.getReceiverUsernames()) {
+            User receiver = userRepository.findByUsername(receiverUsername)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + receiverUsername));
+            if (!memberIds.contains(receiver.getId())) {
+                memberIds.add(receiver.getId());
+            }
         }
 
         Channel channel = Channel.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .memberIds(members)
+                .memberIds(memberIds)
                 .build();
 
-        return channelRepository.save(channel);
+        return toResponse(channelRepository.save(channel));
     }
 
-    public List<Channel> getChannelsForUser(String username) {
+    public List<ChannelResponse> getChannelsForUser(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-        return channelRepository.findByMemberId(user.getId());
+        return channelRepository.findByMemberId(user.getId()).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    public Channel getChannelByName(String name) {
-        return channelRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Channel not found with name: " + name));
+    public ChannelResponse getChannelByName(String name) {
+        return toResponse(channelRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Channel not found: " + name)));
+    }
+
+    private ChannelResponse toResponse(Channel channel) {
+        List<ChannelResponse.MemberSummary> members = List.of();
+        if (channel.getMemberIds() != null && !channel.getMemberIds().isEmpty()) {
+            Map<Long, User> userMap = userRepository.findAllById(channel.getMemberIds())
+                    .stream()
+                    .collect(Collectors.toMap(User::getId, u -> u));
+            members = channel.getMemberIds().stream()
+                    .filter(userMap::containsKey)
+                    .map(id -> ChannelResponse.MemberSummary.builder()
+                            .username(userMap.get(id).getUsername())
+                            .avatarUrl(userMap.get(id).getAvatarUrl())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+        return ChannelResponse.builder()
+                .name(channel.getName())
+                .description(channel.getDescription())
+                .members(members)
+                .createdAt(channel.getCreatedAt())
+                .build();
     }
 }

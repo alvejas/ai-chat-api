@@ -1,6 +1,7 @@
 package com.aichat.api.channel.control;
 
 import com.aichat.api.channel.boundary.ChannelRequest;
+import com.aichat.api.channel.boundary.ChannelResponse;
 import com.aichat.api.channel.entity.Channel;
 import com.aichat.api.common.boundary.ResourceNotFoundException;
 import com.aichat.api.user.control.UserRepository;
@@ -41,18 +42,20 @@ class ChannelServiceTest {
         ChannelRequest request = new ChannelRequest();
         request.setName("general");
         request.setCreatorUsername("alice");
-        request.setReceiverUsername("bob");
+        request.setReceiverUsernames(List.of("bob"));
 
         Channel savedChannel = Channel.builder().name("general").memberIds(List.of(1L, 2L)).build();
 
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(creator));
         when(userRepository.findByUsername("bob")).thenReturn(Optional.of(receiver));
         when(channelRepository.save(any(Channel.class))).thenReturn(savedChannel);
+        when(userRepository.findAllById(anyList())).thenReturn(List.of(creator, receiver));
 
-        Channel result = channelService.createChannel(request);
+        ChannelResponse result = channelService.createChannel(request);
 
         assertNotNull(result);
         assertEquals("general", result.getName());
+        assertEquals(2, result.getMembers().size());
         verify(channelRepository, times(1)).save(any(Channel.class));
     }
 
@@ -61,7 +64,7 @@ class ChannelServiceTest {
         ChannelRequest request = new ChannelRequest();
         request.setName("general");
         request.setCreatorUsername("ghost");
-        request.setReceiverUsername("bob");
+        request.setReceiverUsernames(List.of("bob"));
 
         when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 
@@ -75,7 +78,7 @@ class ChannelServiceTest {
         ChannelRequest request = new ChannelRequest();
         request.setName("general");
         request.setCreatorUsername("alice");
-        request.setReceiverUsername("ghost");
+        request.setReceiverUsernames(List.of("ghost"));
 
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(creator));
         when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
@@ -85,10 +88,11 @@ class ChannelServiceTest {
 
     @Test
     void getChannelByName_WhenExists_ShouldReturnChannel() {
-        Channel channel = Channel.builder().name("general").build();
+        Channel channel = Channel.builder().name("general").memberIds(List.of()).build();
         when(channelRepository.findByName("general")).thenReturn(Optional.of(channel));
+        when(userRepository.findAllById(anyList())).thenReturn(List.of());
 
-        Channel result = channelService.getChannelByName("general");
+        ChannelResponse result = channelService.getChannelByName("general");
 
         assertNotNull(result);
         assertEquals("general", result.getName());

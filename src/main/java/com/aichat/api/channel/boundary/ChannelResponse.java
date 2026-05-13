@@ -10,6 +10,13 @@ import java.util.List;
 public class ChannelResponse {
     private String name;
     private String description;
-    private List<Long> memberIds;
+    private List<MemberSummary> members;
     private LocalDateTime createdAt;
+
+    @Data
+    @Builder
+    public static class MemberSummary {
+        private String username;
+        private String avatarUrl;
+    }
 }

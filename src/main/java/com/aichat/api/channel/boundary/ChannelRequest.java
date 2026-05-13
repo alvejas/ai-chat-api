@@ -1,7 +1,9 @@
 package com.aichat.api.channel.boundary;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class ChannelRequest {
@@ -13,6 +15,6 @@ public class ChannelRequest {
     @NotBlank(message = "Creator username is required")
     private String creatorUsername;
 
-    @NotBlank(message = "Receiver username is required")
-    private String receiverUsername;
+    @NotEmpty(message = "At least one receiver is required")
+    private List<String> receiverUsernames;
 }
