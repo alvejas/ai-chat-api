@@ -3,6 +3,7 @@ package com.aichat.api.channel.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "channels")
@@ -22,7 +23,10 @@ public class Channel {
 
     private String description;
 
-    private boolean isPrivate;
+    @ElementCollection
+    @CollectionTable(name = "channel_members", joinColumns = @JoinColumn(name = "channel_id"))
+    @Column(name = "user_id")
+    private List<Long> memberIds;
 
     private LocalDateTime createdAt;
 

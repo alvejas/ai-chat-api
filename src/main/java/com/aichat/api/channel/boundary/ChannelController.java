@@ -4,6 +4,8 @@ import com.aichat.api.channel.entity.Channel;
 import com.aichat.api.channel.control.ChannelService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,18 +19,13 @@ public class ChannelController {
 
     @PostMapping
     public ChannelResponse createChannel(@Valid @RequestBody ChannelRequest request) {
-        Channel channel = Channel.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .isPrivate(request.isPrivate())
-                .build();
-        Channel createdChannel = channelService.createChannel(channel);
+        Channel createdChannel = channelService.createChannel(request);
         return mapToResponse(createdChannel);
     }
 
     @GetMapping
-    public List<ChannelResponse> getAllChannels() {
-        return channelService.getAllChannels().stream()
+    public List<ChannelResponse> getAllChannels(@AuthenticationPrincipal UserDetails principal) {
+        return channelService.getChannelsForUser(principal.getUsername()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -42,7 +39,7 @@ public class ChannelController {
         return ChannelResponse.builder()
                 .name(channel.getName())
                 .description(channel.getDescription())
-                .isPrivate(channel.isPrivate())
+                .memberIds(channel.getMemberIds())
                 .createdAt(channel.getCreatedAt())
                 .build();
     }

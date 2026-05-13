@@ -1,13 +1,17 @@
 package com.aichat.api.channel.control;
 
+import com.aichat.api.channel.boundary.ChannelRequest;
 import com.aichat.api.channel.entity.Channel;
 import com.aichat.api.common.boundary.ResourceNotFoundException;
+import com.aichat.api.user.control.UserRepository;
+import com.aichat.api.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,6 +21,9 @@ class ChannelServiceTest {
 
     @Mock
     private ChannelRepository channelRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private ChannelService channelService;
@@ -28,14 +35,52 @@ class ChannelServiceTest {
 
     @Test
     void createChannel_ShouldReturnSavedChannel() {
-        Channel channel = Channel.builder().name("general").build();
-        when(channelRepository.save(any(Channel.class))).thenReturn(channel);
+        User creator = User.builder().id(1L).username("alice").email("alice@test.com").password("pw").build();
+        User receiver = User.builder().id(2L).username("bob").email("bob@test.com").password("pw").build();
 
-        Channel result = channelService.createChannel(channel);
+        ChannelRequest request = new ChannelRequest();
+        request.setName("general");
+        request.setCreatorUsername("alice");
+        request.setReceiverUsername("bob");
+
+        Channel savedChannel = Channel.builder().name("general").memberIds(List.of(1L, 2L)).build();
+
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(creator));
+        when(userRepository.findByUsername("bob")).thenReturn(Optional.of(receiver));
+        when(channelRepository.save(any(Channel.class))).thenReturn(savedChannel);
+
+        Channel result = channelService.createChannel(request);
 
         assertNotNull(result);
         assertEquals("general", result.getName());
-        verify(channelRepository, times(1)).save(channel);
+        verify(channelRepository, times(1)).save(any(Channel.class));
+    }
+
+    @Test
+    void createChannel_WhenCreatorNotFound_ShouldThrowException() {
+        ChannelRequest request = new ChannelRequest();
+        request.setName("general");
+        request.setCreatorUsername("ghost");
+        request.setReceiverUsername("bob");
+
+        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> channelService.createChannel(request));
+    }
+
+    @Test
+    void createChannel_WhenReceiverNotFound_ShouldThrowException() {
+        User creator = User.builder().id(1L).username("alice").email("alice@test.com").password("pw").build();
+
+        ChannelRequest request = new ChannelRequest();
+        request.setName("general");
+        request.setCreatorUsername("alice");
+        request.setReceiverUsername("ghost");
+
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(creator));
+        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> channelService.createChannel(request));
     }
 
     @Test

@@ -9,5 +9,10 @@ public class ChannelRequest {
     private String name;
 
     private String description;
-    private boolean isPrivate;
+
+    @NotBlank(message = "Creator username is required")
+    private String creatorUsername;
+
+    @NotBlank(message = "Receiver username is required")
+    private String receiverUsername;
 }
