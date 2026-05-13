@@ -42,6 +42,7 @@ public class UserController {
         return UserResponse.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .password(user.getPassword())
                 .avatarUrl(user.getAvatarUrl())
                 .createdAt(user.getCreatedAt())
                 .build();

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class UserResponse {
     private String username;
     private String email;
+    private String password;
     private String avatarUrl;
     private LocalDateTime createdAt;
 }

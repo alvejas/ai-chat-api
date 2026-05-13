@@ -21,7 +21,6 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
 
-    @Transactional
     public ChannelResponse createChannel(ChannelRequest request) {
         User creator = userRepository.findByUsername(request.getCreatorUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getCreatorUsername()));
@@ -62,14 +61,12 @@ public class ChannelService {
     private ChannelResponse toResponse(Channel channel) {
         List<ChannelResponse.MemberSummary> members = List.of();
         if (channel.getMemberIds() != null && !channel.getMemberIds().isEmpty()) {
-            Map<Long, User> userMap = userRepository.findAllById(channel.getMemberIds())
-                    .stream()
-                    .collect(Collectors.toMap(User::getId, u -> u));
             members = channel.getMemberIds().stream()
-                    .filter(userMap::containsKey)
-                    .map(id -> ChannelResponse.MemberSummary.builder()
-                            .username(userMap.get(id).getUsername())
-                            .avatarUrl(userMap.get(id).getAvatarUrl())
+                    .map(id -> userRepository.findById(id).orElse(null))
+                    .filter(u -> u != null)
+                    .map(u -> ChannelResponse.MemberSummary.builder()
+                            .username(u.getUsername())
+                            .avatarUrl(u.getAvatarUrl())
                             .build())
                     .collect(Collectors.toList());
         }
